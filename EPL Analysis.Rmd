@@ -1,15 +1,19 @@
 ---
 title: "EPL Analysis"
-author: "NAMES"
+author: "Faizan Husain, Luke Ruan, Akhil Thakur, Neethi Thangiah"
 date: "16 September 2021"
 output: pdf_document
 ---
 # Intoduction
 
-1.About EPL /Football
-2 Why analysing -i.e Betting 
-3. About the data 
-4. Variable definitions 
+The English Premier league or the EPL is the top level of the English football league system . The premier league is the most watched sports league in the world, broadcasted to 643 million homes. It has one of the most match attendance, second only to Bundesliga. In this markdown, We try to find the factors which influence the most on the teams chance for winning a match.
+
+# Code
+
+The entire code is reproducible and can be accessed from the following github link.
+
+## Dataset
+
 
 
 ## Loading the required library
@@ -19,6 +23,8 @@ library(tidyverse)
 ```
 
 ## Loading the dataset 
+
+We used the EPL data set sourced from Kaggle. We directly load the data set from the github repository into the data frame.
 
 ```{r message=FALSE, warning=FALSE, paged.print=FALSE}
 url <- "https://raw.githubusercontent.com/Neethithevan/EPL-Data-Analysis/main/Dataset/"
@@ -31,20 +37,15 @@ csv_names = c("2000-01.csv","2001-02.csv","2002-03.csv","2003-04.csv","2004-05.c
 url_csv <- str_c(url , csv_names)
 
 data_all <- url_csv %>% 
-              lapply(read_csv) %>% bind_rows                                                       
+              lapply(read_csv, show_col_types = FALSE) %>% bind_rows                                                       
 
 
 ```
-
-
-```{r}
-data <- read_csv(str_c(url,csv_names[1]))
-```
-
 
 ```{r}
 df <- data_all %>% select("Date","HomeTeam","AwayTeam","FTHG","FTAG","FTR",
-                          "HTHG","HTAG","HTR","HST","AST","HF","AF", "HS", "AS", "Attendance")
+                          "HTHG","HTAG","HTR","HST","AST","HF","AF", "HS", 
+                          "AS", "Referee","HY", "AY", "HR", "AR","Attendance")
 head(as_tibble(df))
 
 ```
@@ -58,9 +59,9 @@ team_names <- df %>% distinct(HomeTeam)
 sprintf("Total Number of Teams : %d", dim(team_names)[1])
 ```
 
-# Analysis 1 
+# Analysis 
 
-## Goals Average/ Game through the 20 seasons
+## Analysis 1 : Goals Average/ Game through the 20 seasons
 
 ```{r}
 
@@ -77,8 +78,9 @@ for(i in 1:20){
 }
 
 df$Season <- season_col # Adding it to the date frame df
-```
 
+```
+We now calculate the average number of goal scored in the league through the seasons.
 ```{r}
 # Finding the goal average per match/game and summarizing the result in season wise
 df_goal_avg_season <- df %>%mutate(TG = FTHG + FTAG) %>%
@@ -88,45 +90,48 @@ head(df_goal_avg_season)
 ```
 
 ```{r fig.height=4.5, fig.width=10}
-# Ploting the results in graph
+# Plotting the results in graph
 ggplot(df_goal_avg_season, aes(Season ,goal_avg ,group = 2)) + 
   geom_point()+ 
   geom_line(col = "red" ,bg = "blue")+
   geom_text(aes(label=signif(goal_avg ,3), size= 3 , vjust = -0.5)) + 
   geom_smooth(method = "lm")+
-  ylab("Goals per Game")+
+  ylab("Average Goals per Game")+
   xlab("Seasons")+
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 ```
-## Analysis 1 inference
-i.e We can see the increase in trend
 
-# Analysis 2
 
-## Home Ground Advantage 
+## Analysis 1 Inference
+We can see an increasing trend in the average number of goals scored from season to season.
+
+## Analysis 2 : Home Ground Advantage 
+
 ```{r}
 
 df %>% group_by(FTR) %>% summarize(number_of_wins = n()) %>% mutate(percent = number_of_wins/sum(number_of_wins))
 ```
-
-```{r fig.height=5, fig.width=10}
-ggplot(df %>% group_by(FTR) %>% summarize( number_of_wins = n()) ,
-       aes(x = FTR , y = number_of_wins,fill = FTR))+
-  geom_bar(stat ="identity") + coord_flip() +theme_grey() +
-  geom_text(aes(label=number_of_wins), vjust=0 , hjust = 5 ,size = 5)+
-  ylab("Number of Wins")+
-  xlab("Full Time Results")+
-  theme(legend.position = "none")
-  
-```
-
-```{r fig.height=5, fig.width=10, message=FALSE, warning=FALSE}
-## Analysing Home Wins by teams 
-
+```{r}
 df_home_ground<-df %>% group_by(HomeTeam,FTR) %>% summarise(wins= n()) %>%
   ungroup() %>% group_by(HomeTeam) %>%  mutate(total_wins = sum(wins)) %>% 
   ungroup() %>% mutate(win_percentage= wins/total_wins) %>% filter(FTR == "H") %>% 
   arrange(desc(win_percentage)) %>% head(11)
+
+boxplot(df_home_ground$win_percentage)
+```
+
+```{r fig.height=5, fig.width=10}
+ggplot(df %>% group_by(FTR) %>% summarize( number_of_wins = n()) ,
+       aes(x = c("Away Team Wins", "Draw", "Home Team Wins") , y = number_of_wins,fill = FTR))+
+  geom_bar(stat ="identity") + coord_flip() +theme_grey() +
+  geom_text(aes(label=number_of_wins), vjust=0 , hjust = 5 ,size = 5)+
+  ylab("Number of Wins")+
+  xlab("Full Time Match Results")+
+  theme(legend.position = "none")
+```
+
+```{r fig.height=5, fig.width=10, message=FALSE, warning=FALSE}
+## Analyzing Home Wins by teams 
 
 ggplot(df_home_ground , aes(x = reorder(HomeTeam ,-win_percentage), y = win_percentage ,fill = HomeTeam)) + 
   geom_bar(stat = "identity") + 
@@ -136,35 +141,37 @@ ggplot(df_home_ground , aes(x = reorder(HomeTeam ,-win_percentage), y = win_perc
   ggtitle( "Home Win Percentage for Teams ")
 
 ```
-```{r}
-boxplot(df_home_ground$win_percentage)
-```
 
-## Analysis- 2 Inference 
+## Analysis 2 Inference 
 
-i.e Explain how man United when played in their home ground have a 0.71 possiblity of winning
+* Number of wins on home field significantly outnumbers both losses and draws.
+* Median winning percentage on home field is >55%.
+    + Therefore there seems to be a correlation between playing on home field and a higher win percentage
 
-## Hypothesis / Problem statement - 1
+
+## Analysis 3 : Do Halftime Leads Translate to Full-time Wins ?
 ```{r}
 ## Hypothesis : Result at the end of first half will might well be the final result
 
-df_htr <- cbind(df  %>%filter(HTR == FTR) %>% summarise(HTR_is_same_as_FTR =n()),
-                df %>% filter(HTR != FTR) %>% summarize(HTR_is_not_same_as_FTR = n()))
-df_htr <- df_htr %>% 
-  mutate(HTR_is_same_as_FTR_per = HTR_is_same_as_FTR/(HTR_is_same_as_FTR+HTR_is_not_same_as_FTR))
-df_htr
+df_htr <- cbind(df  %>%filter(HTR == FTR) %>% summarise(HTR_translates_FTR =n()),
+                df %>% filter(HTR != FTR) %>% summarize(HTR_doesnt_translate_FTR = n()))
+df_htr_pie = data.frame(x <- c(df_htr$HTR_translates_FTR, df_htr$HTR_doesnt_translate_FTR),
+                labels <- c("Half Time -> Full Time Translates", "Hall Time -> Full Time Doesn't Translates"))
+ggplot(df_htr_pie, aes(x="", y=x, fill=labels)) +geom_bar(width = 1, stat = "identity") +
+  coord_polar("y", start=0) +theme_void() + ggtitle("Half time Advantage translation to Full Time") 
 
+df_htr <- df_htr %>% 
+  mutate(HTR_translates_FTR_per = HTR_translates_FTR/(HTR_translates_FTR+HTR_doesnt_translate_FTR))
+df_htr
 ```
 
-# Inference
-i.e About 60 % of the time the results at the end of first half well as become the result at the end time . It does not support our hypothesis effectiently (i.e 60% is just 10 % more than the equal possibility)
+## Analysis 3 Inference
+* Most of the time, winning team at halftime will win the game.
+* ~40% of the time, the losing team at halftime will come back to win
 
 
-## Hypothesis / PS - 2
+## Analysis 4 : Shots Taken vs. Shots On Target
 ```{r}
-# Does Shot on target have any relation with goals ? 
-#Just first find it for winning teams and compare it with losing team
-# For Wining Team
 df_st_h <- df %>% filter(FTR =='H' ) %>% select(FTHG,HST, HS)
 colnames(df_st_h)<- c('GoalsScored','ST', 'S')
 
@@ -200,6 +207,14 @@ ggplot(df_st , aes(x= S ,y = ST,colour = event , fill = event)) +
   xlab("Number of Total Shots") +
   ylab("Number of shots on target")
 ```
+
+## Analysis 4 Inference
+
+* Positive correlation between Shots Taken and Shots On Target.
+  + Take more Shots to score more Shots on Target.
+
+## Analysis 5 : Shots On Target vs. Goals Scored
+
 ```{r fig.height=5, fig.width=10, message=FALSE, warning=FALSE, paged.print=FALSE}
 #Building a linear model
 ggplot(df_st , aes(x= ST ,y = GoalsScored,colour = event , fill = event)) +
@@ -211,12 +226,16 @@ ggplot(df_st , aes(x= ST ,y = GoalsScored,colour = event , fill = event)) +
   ylab(" Goals Scored")
 ```
 
+## Analysis 5 Inference
 
-# Hypothesis / PS -3
+* Positive correlation between both:
+* Shots Taken and Shots On Target
+* Shots On Target and Goals Scored
+    + Therefore, take more shots!
+
+## Analysis 6 : Does committing more fouls correlate with scoring goals?
 
 ```{r}
-# Commiting more fouls will eventualy result in less goals .
-# Comparing it for wining and lossing side
 
 df_fouls_h <- df %>% filter(FTR =='H' ) %>% select(FTHG,HF,Attendance)
 colnames(df_fouls_h)<- c('GoalsScored','Fouls', 'Attendance')
@@ -241,6 +260,7 @@ df_fouls_l$event <- "Lossing_Team"
 
 df_fouls <- rbind(df_fouls_l , df_fouls_w)
 
+
 ```
 
 ```{r fig.height=5, fig.width=10, message=FALSE, warning=FALSE, paged.print=FALSE}
@@ -251,9 +271,17 @@ ggplot(df_fouls , aes(x= Fouls ,y = GoalsScored,colour = event , fill = event)) 
   theme_bw() + 
   xlab("Number of Fouls") +
   ylab(" Goals Scored")
-
-
 ```
+
+## Analysis 6 Inference
+
+* Negative correlation between fouls committed and goals scored for the winning team
+    + Therefore, commit less fouls
+
+## Analysis 7 : Audience Vs Fouls committed.
+
+Let's see how the audience affect the gameplay. Specifically, lets see if the attendance affects the number of fouls committed by the players.
+
 ```{r fig.height=5, fig.width=10, message=FALSE, warning=FALSE, paged.print=FALSE}
 ggplot(df_fouls , aes(x= Attendance ,y = Fouls,colour = event , fill = event)) +
   geom_point(aes(shape=event)) +
@@ -262,6 +290,48 @@ ggplot(df_fouls , aes(x= Attendance ,y = Fouls,colour = event , fill = event)) +
   theme_bw() + 
   xlab("Attendance") +
   ylab("Number of Fouls")
-
 ```
 
+## Analysis 7 Inference
+
+* We see that there is no significant affect on the happening of fouls due to the attendance.
+
+# BIAS
+
+* We only looked at EPL. The factors affecting the match might not be significant in other leagues.
+* We looked at the entire past 20 of data for out inferences. There might be significant changes in the gameplay in the recent years compared to say last decade. 
+* There might be some other factors affecting the gameplay of the match, such as the fouls awarded by the referee. So, let see it that's actually the case.
+
+# Are some referees more inclined to give out more fouls?
+```{r}
+df_ref <- df %>% group_by(Referee) %>% 
+  summarize(count = n(), fouls=sum(HR+AR+AY+HY)) %>% 
+  ungroup()
+
+df_ref %>% group_by(Referee) %>%
+  ggplot(aes(x = Referee, y = fouls/count)) + 
+  geom_bar(stat = "identity") + 
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+  xlab("Various Referees") +
+  ylab("Fouls Awarded Per Match") +
+  ggtitle( "Fouls Awarded by Referees per match") +
+  theme(axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())
+```
+
+# Inference
+
+* We can see that some of the referees award more fouls on average
+* So, there is a chance that there might be some bias introduced by the referee.
+
+
+# Conclusion
+
+# Formula For Victory.
+
+Based on our above analysis, we can conclude that following this formula will lead to victory. 
+
+1. Play on your home field!
+2. Get an early lead
+3. Take more shots
+4. Commit fewer (or smarter) fouls
