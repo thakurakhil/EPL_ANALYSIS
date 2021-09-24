@@ -1,25 +1,32 @@
 ---
-title: "EPL Analysis"
+title: "EPL Analysis - Team Sports Analytics Buff"
 author: "Faizan Husain, Luke Ruan, Akhil Thakur, Neethi Thangiah"
 date: "16 September 2021"
 output: pdf_document
 ---
 # Intoduction
 
-The English Premier league or the EPL is the top level of the English football league system . The premier league is the most watched sports league in the world, broadcasted to 643 million homes. It has one of the most match attendance, second only to Bundesliga. In this markdown, We try to find the factors which influence the most on the teams chance for winning a match.
+The English Premier league or the EPL is the top level of the English football league system . The premier league is the most watched sports league in the world, broadcasted to 643 million homes. It generates $4 billion in TV revenue from 2019-2020 alone. It has one of the most match attendance, second only to Bundesliga. Because of such a reputation and financial incentive, its important that we understand various factors affeting the matches. In this markdown, We try to find the factors which influence the most on the teams chance for winning a match.
 
 # Code
 
 The entire code is reproducible and can be accessed from the following github link.
 
+https://github.com/thakurakhil/EPL_ANALYSIS
+
+
 ## Dataset
-
-
 
 ## Loading the required library
 
+The library "Tidyverse" is essential for the document. Please install it. 
+
+
 ```{r message=FALSE, warning=FALSE, paged.print=FALSE}
+# To install tidyverse, please uncomment the below line
+# install.packages("tidyverse")
 library(tidyverse)
+
 ```
 
 ## Loading the dataset 
@@ -27,7 +34,7 @@ library(tidyverse)
 We used the EPL data set sourced from Kaggle. We directly load the data set from the github repository into the data frame.
 
 ```{r message=FALSE, warning=FALSE, paged.print=FALSE}
-url <- "https://raw.githubusercontent.com/Neethithevan/EPL-Data-Analysis/main/Dataset/"
+url <- "https://raw.githubusercontent.com/thakurakhil/EPL_ANALYSIS/main/Dataset/"
 
 csv_names = c("2000-01.csv","2001-02.csv","2002-03.csv","2003-04.csv","2004-05.csv",
               "2005-06.csv","2006-07.csv","2007-08.csv","2008-09.csv","2009-10.csv",
